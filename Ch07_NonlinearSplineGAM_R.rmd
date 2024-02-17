@@ -16,7 +16,6 @@ pacman::p_load(ISLR
                ,HSAUR2
                ,mboost
                ,rpart
-               ,mgcv
                ,wordcloud
                ,knitr,TTR,zoo)
 
@@ -102,8 +101,11 @@ Try the method described in Ch7.  See if you can improve the performance.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+fit_alive <- lm(SURVIVED_bin ~ poly(TOBACCO, 2), data = Train_COVID)
+
+pred_fit <- predict(fit_alive, newdata = Test_COVID, se = TRUE)
+actual <- Test_COVID$SURVIVED_bin
+calc_loss(pred_fit$fit, actual)
 ```
 
 Your answer:
@@ -129,9 +131,35 @@ data(College,package = "ISLR2")
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+set.seed(123)
+#sum(is.na(College$Outstate))
+
+college = College
+college_sample = sample.split(college$Outstate, SplitRatio = 0.80)
+college_train = subset(college, college_sample==TRUE) 
+college_test = subset(college, college_sample==FALSE)
 ```
+
+```{r}
+fwd = regsubsets(Outstate~., data=college_train, nvmax=17, method="forward")
+fwd_summary = summary(fwd)
+
+which.min(fwd_summary$cp)
+which.min(fwd_summary$bic)
+which.max(fwd_summary$adjr2)
+```
+
+```{r}
+par(mfrow=c(2,2))
+plot(1:17, fwd_summary$cp,xlab="Variables",ylab="Cp",main="Cp", type='b')
+plot(1:17, fwd_summary$bic,xlab="Variables",ylab="BIC",main="BIC", type='b')
+plot(1:17, fwd_summary$adjr2,xlab="Variables",ylab="Adjusted R2",main="Adjusted R2", type='b')
+```
+
+```{r}
+coef(fwd,5)
+```
+
 
 Your answer:
 
@@ -147,9 +175,16 @@ Please write your answer in full sentences.
 
 
 Your code:
+```{r}
+plot(college_train$Room.Board)
+plot(college_train$PhD)
+plot(college_train$perc.alumni)
+plot(college_train$Expend)
+```
+
 ```{r,echo=TRUE}
-#
-#
+gam.m1 = gam(Outstate ~ Private + s(Room.Board,3) + s(PhD,2) + s(perc.alumni,2) + s(Expend,2), data=college_train)
+summary(gam.m1)
 ```
 
 Your answer:
@@ -166,8 +201,9 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+preds = predict(gam.m1,newdata = college_test)
+mse = mean((college_test$Outstate - preds)^2)
+mse
 ```
 
 Your answer:
@@ -184,14 +220,13 @@ Please write your answer in full sentences.
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+summary(gam.m1)
 ```
 
 Your answer:
 
 ~~~
-Please write your answer in full sentences.
+Expend shows a strong sigh of non-linear relationship. The Npar Df is 1, but the p-value is very small.
 
 
 ~~~
@@ -204,8 +239,16 @@ Fit some of the non-linear models investigated in chapter 7 to the `Auto` data s
 
 Your code:
 ```{r,echo=TRUE}
-#
-#
+pairs(Auto[1:7])
+
+poly.1 = lm(mpg ~ weight ,data=Auto)
+poly.2 = lm(mpg ~ poly(weight ,2) ,data=Auto)
+poly.3 = lm(mpg ~ poly(weight ,3) ,data=Auto)
+poly.4 = lm(mpg ~ poly(weight ,4) ,data=Auto)
+poly.5 = lm(mpg ~ poly(weight ,5) ,data=Auto)
+poly.6 = lm(mpg ~ poly(weight ,6) ,data=Auto)
+
+anova(fit.1,fit.2,fit.3,fit.4,fit.5,fit.6)
 ```
 
 Your answer:
